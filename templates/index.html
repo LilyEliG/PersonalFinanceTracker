@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #FFD700;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #FFD700;
+            text-align: center;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background-color: #1A1A1A;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(255, 215, 0, 0.2);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+        th {
+            background-color: #333;
+        }
+        .notes-section {
+            margin-top: 20px;
+
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            background-color: #1A1A1A;
+            color: #FFD700;
+            border: 1px solid #444;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        button {
+            background-color: #FFD700;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #CCAC00;
+        }
+        input, select {
+            margin: 5px;
+            padding: 8px;
+            width: calc(100% - 26px); /* Full width with padding */
+            background-color: #1A1A1A;
+            color: #FFD700;
+            border: 1px solid #444;
+            border-radius: 5px;
+        }
+        .chart-container {
+            margin-top: 20px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                text-align: center;
+            }
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            input, select {
+                width: calc(100% - 26px); /* Full width with padding */
+            }
+        }
+
+        @media (min-width: 769px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .card:nth-child(3) {
+                grid-column: span 2;
+            }
+            .card:nth-child(4),
+            .card:nth-child(5) {
+                grid-column: span 1;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .dashboard {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .card:nth-child(3) {
+                grid-column: span 3;
+            }
+            .card:nth-child(4),
+            .card:nth-child(5) {
+                grid-column: span 1;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Finance Tracker</h1>
+    <div class="dashboard">
+        <!-- Add Transaction Form -->
+        <div class="card">
+            <h2>Add New Transaction</h2>
+            <form id="transaction-form">
+                <input type="date" id="date" required>
+                <input type="number" step="0.01" id="amount" placeholder="Amount" required>
+                <select id="type" required>
+                    <option value="Income">Income</option>
+                    <option value="Expense">Expense</option>
+                </select>
+                <select id="category" required>
+                    <option value="Salary">Salary</option>
+                    <option value="Bonus">Bonus</option>
+                    <option value="Food">Food</option>
+                    <option value="Utilities">Utilities</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Travel">Travel</option>
+                </select>
+                <input type="text" id="description" placeholder="Description" required>
+                <button type="submit">Add Transaction</button>
+            </form>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="card">
+            <h2>Recent Transactions</h2>
+            <table id="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Transactions will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Notes and Planning -->
+        <div class="card notes-section">
+            <h2>Notes & Planning</h2>
+            <textarea id="notes" rows="5" placeholder="Add your notes or plans here..."></textarea>
+            <button onclick="saveNotes()">Save Notes</button>
+        </div>
+
+        <!-- Charts -->
+        <div class="card">
+            <h2>Expense Breakdown</h2>
+            <div class="chart-container">
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Monthly Comparison</h2>
+            <div class="chart-container">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <button onclick="viewArchivedTransactions()" style="margin-top: 20px;">Archived Transactions</button>
+
+    <script>
+        // Function to add a new transaction
+        document.getElementById('transaction-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const date = document.getElementById('date').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const type = document.getElementById('type').value;
+            const category = document.getElementById('category').value;
+            const description = document.getElementById('description').value;
+
+            // Add the transaction to the table
+            const tableBody = document.querySelector('#transactions-table tbody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>${date}</td>
+                <td>${type === 'Income' ? '+' : '-'}${amount.toFixed(2)}</td>
+                <td>${type}</td>
+                <td>${category}</td>
+                <td>${description}</td>
+            `;
+            tableBody.appendChild(newRow);
+
+            // Clear the form
+            document.getElementById('transaction-form').reset();
+
+            // Update charts
+            updateCharts();
+
+            // Reset pie chart if new monthly salary is added
+            if (type === 'Income' && category === 'Salary') {
+                resetPieChart();
+            }
+        });
+
+        // Function to save notes
+        function saveNotes() {
+            const notes = document.getElementById('notes').value;
+            localStorage.setItem('financeNotes', notes);
+            alert('Notes saved!');
+        }
+
+        // Load saved notes on page load
+        window.onload = function() {
+            const savedNotes = localStorage.getItem('financeNotes');
+            if (savedNotes) {
+                document.getElementById('notes').value = savedNotes;
+            }
+        };
+
+        // Chart.js Configuration
+        const pieChartCtx = document.getElementById('pieChart').getContext('2d');
+        const barChartCtx = document.getElementById('barChart').getContext('2d');
+
+        let pieChart, barChart;
+
+        function updateCharts() {
+            const transactions = Array.from(document.querySelectorAll('#transactions-table tbody tr'));
+            const categories = {};
+
+            transactions.forEach(transaction => {
+                const category = transaction.cells[3].textContent;
+                const amount = parseFloat(transaction.cells[1].textContent);
+                if (!categories[category]) {
+                    categories[category] = 0;
+                }
+                categories[category] += Math.abs(amount);
+            });
+
+            // Update Pie Chart
+            if (pieChart) pieChart.destroy();
+            pieChart = new Chart(pieChartCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(categories),
+                    datasets: [{
+                        data: Object.values(categories),
+                        backgroundColor: ['#FFD700', '#FFA500', '#FF8C00', '#FF6347', '#FF4500', '#FF0000'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+
+            // Update Bar Chart (Monthly Comparison)
+            const months = {};
+            transactions.forEach(transaction => {
+                const date = new Date(transaction.cells[0].textContent);
+                const month = date.toLocaleString('default', { month: 'short' });
+                const amount = parseFloat(transaction.cells[1].textContent);
+                if (!months[month]) {
+                    months[month] = 0;
+                }
+                months[month] += Math.abs(amount);
+            });
+
+            if (barChart) barChart.destroy();
+            barChart = new Chart(barChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(months),
+                    datasets: [{
+                        label: 'Total Expenses',
+                        data: Object.values(months),
+                        backgroundColor: '#FFD700',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                        }
+                    }
+                }
+            });
+        }
+
+        // Reset Pie Chart
+        function resetPieChart() {
+            if (pieChart) pieChart.destroy();
+            pieChart = new Chart(pieChartCtx, {
+                type: 'pie',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: ['#FFD700', '#FFA500', '#FF8C00', '#FF6347', '#FF4500', '#FF0000'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        // View Archived Transactions
+        function viewArchivedTransactions() {
+            alert('Redirecting to Archived Transactions page...');
+            // You can implement the logic to redirect to a new page or display archived transactions here.
+        }
+
+        // Initialize charts on page load
+        updateCharts();
+    </script>
+</body>
+</html>
