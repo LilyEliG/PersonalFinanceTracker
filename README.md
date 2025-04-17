@@ -21,35 +21,54 @@ A personal finance management web application designed to track income, expenses
 
 - **Frontend**: HTML, CSS, JavaScript
 - **Charts**: [Chart.js](https://www.chartjs.org/)
-- **Data Storage**: Browser LocalStorage
+- **Data Storage**: 
+  - **SQLite** (for earlier backend versions with Flask)
+  - **Browser LocalStorage** (current client-only version)
 - **Styling**: Custom black-and-gold theme with CSS Grid/Flexbox
+
 
 ## Installation
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/finance-tracker.git
-2. Open index.html in a web browser. No additional setup required!
+
+2. For the **SQLite + Flask version**:
+   - Install dependencies: pip install flask
+   - Run python app.py and visit http://localhost:5000.
+
+3. For the client-only localStorage version:
+   - Open index.html directly in a browser.
 
 
 ## Usage
 
-1. **Add a Transaction**:
-  - Fill out the form with date, amount, type (income/expense), category, and description.
-  - Click Add Transaction to save it.
-2. **View Charts**:
-  - The pie chart updates automatically to show expense categories.
-  - The bar chart displays monthly spending trends.
-3. **Save Notes**:
+**SQLite + Flask Version (Optional)**
+
+- Follow the Flask setup steps above.
+- Transactions are stored in a SQLite database (personal_finance.db).
+
+**Client-Only Version (LocalStorage)**
+
+1. **Add a Transaction:**
+   - Fill out the form and click Add Transaction (data saved in localStorage).
+2. **View Charts:**
+   - The pie chart shows expense categories, and the bar chart tracks monthly trends.
+3. **Archived Transactions:**
+   - Archived data is stored in localStorage and accessible via archived.html.
+4. **Save Notes**:
   - Type notes or plans in the textarea under Notes & Planning.
   - Click Save Notes to persist them (data saved in localStorage).
-4. **Archived Transactions**:
-  - Click the Archived Transactions button to view past transactions grouped by month.
 
 ## Archived Transactions Logic
 
 - Transactions are archived automatically at the end of each month.
 - Archived data is stored in localStorage and accessible via the archived.html page.
+
+## Why Two Versions?
+
+- The SQLite + Flask version demonstrates backend integration for persistent storage.
+- The client-only version simplifies usage for those who prefer no backend setup.
 
 ## Future Improvements
 
